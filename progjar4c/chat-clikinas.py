@@ -1,0 +1,123 @@
+import socket
+import os
+import json
+import base64
+import logging
+import string
+
+TARGET_IP = "127.0.0.1"
+TARGET_PORT = 8889
+
+
+class ChatClient:
+    def __init__(self):
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server_address = (TARGET_IP,TARGET_PORT)
+        self.sock.connect(self.server_address)
+        self.tokenid=""
+    def proses(self,cmdline):
+        j=cmdline.split(" ")
+        try:
+            command=j[0].strip()
+            if (command=='auth'):
+                username=j[1].strip()
+                password=j[2].strip()
+                return self.login(username,password)
+            elif (command=='send'):
+                usernameto = j[1].strip()
+                message=""
+                for w in j[2:]:
+                   message="{} {}" . format(message,w)
+                return self.sendmessage(usernameto,message)
+            elif (command=='inbox'):
+                return self.inbox()
+
+            elif (command=='send_file'):
+                usernameto = j[1].strip()
+                filename = j[2].strip()
+                return self.sendfile(usernameto,filename)
+
+            else:
+                return "*Maaf, command tidak benar"
+        except IndexError:
+                return "-Maaf, command tidak benar"
+
+    def sendstring(self,string):
+        try:
+            self.sock.sendall(string.encode())
+            receivemsg = ""
+            while True:
+                data = self.sock.recv(64)
+                if (data):
+                    receivemsg = "{}{}".format(receivemsg,data.decode())
+                    if receivemsg[-4:]=='\r\n\r\n':
+                        return json.loads(receivemsg)
+        except:
+            self.sock.close()
+            return { 'status' : 'ERROR', 'message' : 'Proses pengiriman data gagal'}
+    def sendstring(self,string):
+        try:
+            self.sock.sendall(string.encode())
+            receivemsg = ""
+            while True:
+                data = self.sock.recv(64)
+                print("diterima dari server",data)
+                if (data):
+                    receivemsg = "{}{}" . format(receivemsg,data.decode())  #data harus didecode agar dapat di operasikan dalam bentuk string
+                    if receivemsg[-4:]=='\r\n\r\n':
+                        print("end of string")
+                        return json.loads(receivemsg)
+        except:
+            self.sock.close()
+            return { 'status' : 'ERROR', 'message' : 'Gagal'}
+    def login(self,username,password):
+        string="auth {} {} \r\n" . format(username,password)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            self.tokenid=result['tokenid']
+            return "username {} logged in, token {} " .format(username,self.tokenid)
+        else:
+            return "Error, {}" . format(result['message'])
+    def sendmessage(self,usernameto="xxx",message="xxx"):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="send {} {} {} \r\n" . format(self.tokenid,usernameto,message)
+        print(string)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "message sent to {}" . format(usernameto)
+        else:
+            return "Error, {}" . format(result['message'])
+    def inbox(self):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="inbox {} \r\n" . format(self.tokenid)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "{}" . format(json.dumps(result['messages']))
+        else:
+            return "Error, {}" . format(result['message'])
+    def sendfile(self,usernameto, filename):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        try :
+            file = open(filename, "rb")
+        except FileNotFoundError:
+            return "Error, {} file not found".format(filename)
+
+        buffer = file.read()
+        convertedstring = base64.b64encode(buffer).decode('utf-8')
+        message ="send file {} {} {} {} \r\n" . format(self.tokenid,usernameto, filename, convertedstring)
+        result = self.sendstring(message)
+        if result['status']=='OK':
+            return "file {} sent to {}" . format(filename, usernameto)
+        else:
+            return "Error, {}" . format(result['message'])
+
+
+if __name__=="__main__":
+    cc = ChatClient()
+    while True:
+        cmdline = input("Command {}:" . format(cc.tokenid))
+        print(cc.proses(cmdline))
+
