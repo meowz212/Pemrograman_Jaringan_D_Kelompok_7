@@ -105,6 +105,7 @@ class ChatClient:
         message="send_file {} {} {} {} \r\n" .format(self.tokenid, usernameto, filename, buffer_string)
         result = self.sendstring(message)
         if result['status']=='OK':
+            self.sendmessage(usernameto, 'Mengirim File ' + filename + ' ke My Files')
             return "file {} sent to {}" . format(filename, usernameto)
         else:
             return "Error, {}" . format(result['message'])
@@ -114,13 +115,10 @@ class ChatClient:
         string="my_file {} \r\n" . format(self.tokenid)
         result = self.sendstring(string)
         if result['status']=='OK':
-            for k, v in result['messages'].items():
-                if v:
-                    print(k, v)
             return "{}" . format(json.dumps(result['messages']))
         else:
             return "Error, {}" . format(result['message'])
-    def downloadfile(self, username, filename, filename2):
+    def downloadfile(self, username, filename):
         if (self.tokenid==""):
             return "Error, not authorized"
         string="download_file {} {} {} \r\n" . format(self.tokenid, username, filename)
