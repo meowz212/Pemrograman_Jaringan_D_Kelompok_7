@@ -16,9 +16,12 @@ TARGET_PORT = 8889
 
 # get user list and initialize thread trace
 chat = Chat()
-users = {}
 users = chat.getuser()
 groups = chat.getgroup()
+# members = ['messi', 'rimas', 'kinas']
+# groups = chat.newgroup('group3', 'Group 3', members)
+print(groups)
+
 
 class ChatClient:
     def __init__(self):
@@ -26,9 +29,10 @@ class ChatClient:
         self.server_address = (TARGET_IP, TARGET_PORT)
         self.sock.connect(self.server_address)
         self.initlocation = os.getcwd()
+        self.isfile = False
+        self.isgroup = False
         self.receiverid = ""
         # self.chatopen = False
-        self.isfile = False
         self.rcv = threading.Thread(target=self.getmessage)
         self.tokenid = ""
         self.initialize_login()
@@ -48,7 +52,7 @@ class ChatClient:
                                  height=300)
         # create a Label
         self.pls = Label(self.loginpage,
-                         text="Please login to continue",
+                         text="Silahkan login dahulu",
                          font="Helvetica 14 bold")
 
         self.pls.place(relheight=0.15,
@@ -56,39 +60,39 @@ class ChatClient:
                        rely=0.07)
         # create a Label
         self.labelName = Label(self.loginpage,
-                               text="Name: ",
+                               text="Username: ",
                                font="Helvetica 12")
 
         self.labelName.place(relheight=0.2,
                              relx=0.1,
-                             rely=0.2)
+                             rely=0.27)
 
         # create a entry box for
         self.entryName = Entry(self.loginpage,
                                font="Helvetica 14")
 
-        self.entryName.place(relwidth=0.4,
+        self.entryName.place(relwidth=0.5,
                              relheight=0.12,
                              relx=0.35,
-                             rely=0.2)
+                             rely=0.3)
 
         # create a Label pass
         self.labelPass = Label(self.loginpage,
-                               text="Pass: ",
+                               text="Password: ",
                                font="Helvetica 12")
 
         self.labelPass.place(relheight=0.2,
                              relx=0.1,
-                             rely=0.4)
+                             rely=0.47)
 
         # create a entry box for pass
         self.entryPass = Entry(self.loginpage,
                                font="Helvetica 14")
 
-        self.entryPass.place(relwidth=0.4,
+        self.entryPass.place(relwidth=0.5,
                              relheight=0.12,
                              relx=0.35,
-                             rely=0.4)
+                             rely=0.5)
 
         # set the focus of the curser
         self.entryName.focus()
@@ -96,7 +100,7 @@ class ChatClient:
         # create a Continue Button
         # along with action
         self.go = Button(self.loginpage,
-                         text="CONTINUE",
+                         text="Login",
                          font="Helvetica 14 bold",
                          command=lambda: self.loginto(self.entryName.get(), self.entryPass.get()))
 
@@ -106,7 +110,7 @@ class ChatClient:
 
     def loginto(self, username, password):
         self.loginpage.destroy()
-        x = self.login(username, password).strip();
+        x = self.login(username, password).strip()
         print(x)
         if (x == "Error, User Tidak Ada"):
             tkinter.messagebox.showinfo('Error', 'Nama tidak ada')
@@ -150,12 +154,12 @@ class ChatClient:
                         relheight=120.1)
 
         # label
-        self.labelchat = Label(self.line,
+        self.labellist = Label(self.line,
                                text="List Chat",
                                bg="#ABB2B9",
                                font="Helvetica 20")
 
-        self.labelchat.place(relheight=0.0005,
+        self.labellist.place(relheight=0.0005,
                              rely=0.0001,
                              relx=0.38)
 
@@ -184,31 +188,32 @@ class ChatClient:
         # loop group target list
         for k, v in groups.items():
             # print(k, v)
-            self.buttonperson = Button(self.line,
-                                       text=v["nama"],
-                                       font="Helvetica 10 bold",
-                                       width=20,
-                                       bg="#FFFFFF",
-                                       command=lambda group=k, groupname=v["nama"]: self.sendgroup(name,
-                                                                                                      groupname,
-                                                                                                      group))
+            for i in v['member']:
+                if i == name:
+                    self.buttongroup = Button(self.line,
+                                               text=v["nama"],
+                                               font="Helvetica 10 bold",
+                                               width=20,
+                                               bg="#FFFFFF",
+                                               command=lambda group=k, groupname=v["nama"]: self.sendgroup(name,
+                                                                                                           groupname,
+                                                                                                           group))
 
-            self.buttonperson.place(relx=0.1,
-                                    rely=0.0008 + x,
-                                    relheight=0.0006,
-                                    relwidth=0.8)
-            x = x + 0.0008
+                    self.buttongroup.place(relx=0.1,
+                                            rely=0.0008 + x,
+                                            relheight=0.0006,
+                                            relwidth=0.8)
+                    x = x + 0.0008
 
-        #Bikin Grup Baru
-        self.buttonperson = Button(self.line,
-                                   text="Buat atau Join Grup",
+        # Bikin Grup Baru
+        self.buttongrups = Button(self.line,
+                                   text="Buat Grup",
                                    font="Helvetica 10 bold",
                                    width=20,
                                    bg="#FFFFFF",
-                                   command=lambda receiver=k, receivername=v["nama"]: self.sendto(name, receivername,
-                                                                                                  receiver))
+                                   command=lambda: self.createegroup())
 
-        self.buttonperson.place(relx=0.1,
+        self.buttongrups.place(relx=0.1,
                                 rely=0.0008 + x,
                                 relheight=0.0006,
                                 relwidth=0.8)
@@ -225,9 +230,225 @@ class ChatClient:
 
         # self.textCons.config(state=DISABLED)
 
+    def createegroup(self):
+        self.Window.deiconify()
+        self.Window.title("Menu Chat")
+        self.Window.resizable(width=False,
+                              height=False)
+        self.Window.configure(width=400,
+                              height=400,
+                              bg="#17202A")
+        self.labelHead = Label(self.Window,
+                               bg="#17202A",
+                               fg="#EAECEE",
+                               text="login sebagai " + self.name,
+                               font="Helvetica 13 bold",
+                               pady=5)
+
+        self.labelHead.place(relwidth=1)
+        self.line = Label(self.Window,
+                          width=450,
+                          bg="#ABB2B9")
+
+        self.line.place(relwidth=1,
+                        rely=0.07,
+                        relheight=120.1)
+
+        # label
+        self.labelchat = Label(self.line,
+                               text="Masukkan Informasi",
+                               bg="#ABB2B9",
+                               font="Helvetica 20")
+
+        self.labelchat.place(relheight=0.0005,
+                             rely=0.0001,
+                             relx=0.18)
+        # create a Label
+        self.pls = Label(self.line,
+                         text="Silahkan login dahulu",
+                         font="Helvetica 14 bold")
+
+        self.pls.place(relheight=0.15,
+                       relx=0.2,
+                       rely=0.07)
+
+        # groupid name input
+        self.entrygroupid = Entry(self.line,
+                                   font="Helvetica 14",)
+
+        self.entrygroupid.place(relx=0.4,
+                                rely=0.0018,
+                                relheight=0.0006,
+                                relwidth=0.45)
+
+        self.labelgroupid = Label(self.line,
+                               bg="#ABB2B9",
+                               text="Group Id : ",
+                               font="Helvetica 12")
+
+        self.labelgroupid.place(relheight=0.0006,
+                                relx=0.18,
+                                rely=0.0018)
+
+        # groupName name input
+        self.entrygroupname = Entry(self.line,
+                                   font="Helvetica 14",)
+
+        self.entrygroupname.place(relx=0.4,
+                                rely=0.0028,
+                                relheight=0.0006,
+                                relwidth=0.45)
+
+        self.labelgroupname = Label(self.line,
+                               bg="#ABB2B9",
+                               text="Nama Group : ",
+                               font="Helvetica 12")
+
+        self.labelgroupname.place(relheight=0.0006,
+                                relx=0.10,
+                                rely=0.0028)
+
+        # Member count name input
+        self.entrymembercount = Entry(self.line,
+                                   font="Helvetica 14",)
+
+        self.entrymembercount.place(relx=0.4,
+                                rely=0.0038,
+                                relheight=0.0006,
+                                relwidth=0.45)
+
+        self.labelmembercount = Label(self.line,
+                               bg="#ABB2B9",
+                               text="Jumlah Member : ",
+                               font="Helvetica 12")
+
+        self.labelmembercount.place(relheight=0.0006,
+                                relx=0.05,
+                                rely=0.0038)
+
+
+        # button submit
+        self.buttonMsg = Button(self.line,
+                                text="Buat",
+                                font="Helvetica 10 bold",
+                                width=20,
+                                bg="#ABB2B9",
+                                command=lambda: self.invitemember(self.entrygroupid.get(), self.entrygroupname.get() , self.entrymembercount.get()))
+
+        self.buttonMsg.place(relx=0.1,
+                             rely=0.0058,
+                             relheight=0.0008,
+                             relwidth=0.8)
+
+    def invitemember(self,groupid,groupname,membercount):
+        if not(groupid and groupid.strip()) or not(groupname and groupname.strip()) or not(membercount and membercount.strip()):
+            return tkinter.messagebox.showinfo('Error', 'Input ada yang kosong')
+        member = int(membercount)
+        self.members = []
+        self.Window.deiconify()
+        self.Window.title("Pilih Anggota")
+        self.Window.resizable(width=False,
+                              height=False)
+        self.Window.configure(width=400,
+                              height=600,
+                              bg="#17202A")
+        self.labelHead = Label(self.Window,
+                               bg="#17202A",
+                               fg="#EAECEE",
+                               text="login sebagai " + self.name,
+                               font="Helvetica 13 bold",
+                               pady=5)
+
+        self.labelHead.place(relwidth=1)
+        self.line = Label(self.Window,
+                          width=450,
+                          bg="#ABB2B9")
+
+        self.line.place(relwidth=1,
+                        rely=0.07,
+                        relheight=120.1)
+
+        # label
+        self.labelmember = Label(self.line,
+                               text="Isi Username Member",
+                               bg="#ABB2B9",
+                               font="Helvetica 20")
+
+        self.labelmember.place(relheight=0.0005,
+                             rely=0.0001,
+                             relx=0.18)
+
+        # Capture list user
+        userlist = []
+        for k, _ in users.items():
+            userlist.append(k)
+
+        usergang = ','.join(userlist)
+
+        # Print list user
+        self.labelmember = Label(self.line,
+                               text="user yang bisa diambil " + usergang,
+                               bg="#ABB2B9",
+                               font="Helvetica 10")
+
+        self.labelmember.place(relheight=0.0005,
+                             rely=0.0005,
+                             relx=0.05)
+
+        # loop Isi username
+        self.entrymemberid = []
+        y = 0
+        for x in range(member):
+            self.entrymemberid.append(Entry(self.line,
+                                      font="Helvetica 14", ))
+
+            self.entrymemberid[x].place(relx=0.4,
+                                    rely=0.001+y,
+                                    relheight=0.0006,
+                                    relwidth=0.45)
+
+            self.labelmemberid = Label(self.line,
+                                      bg="#ABB2B9",
+                                      text="User Id : ",
+                                      font="Helvetica 12")
+
+            self.labelmemberid.place(relheight=0.0006,
+                                    relx=0.18,
+                                    rely=0.001+y)
+            y = y + 0.001
+            # self.members[x] = self.entrymemberid[x].get()
+
+        # button submit
+        self.buttonMsg = Button(self.line,
+                                text="Buat",
+                                font="Helvetica 10 bold",
+                                width=20,
+                                bg="#ABB2B9",
+                                command=lambda: self.grabmember(groupid,groupname,member))
+
+        self.buttonMsg.place(relx=0.1,
+                             rely=0.001+y,
+                             relheight=0.0008,
+                             relwidth=0.8)
+
+    def grabmember(self,groupids,groupnames,membercounts):
+        for x in range(membercounts):
+            input = self.entrymemberid[x].get()
+            if input in users:
+                self.members.append(self.entrymemberid[x].get())
+            else:
+                return tkinter.messagebox.showinfo('Error', 'Ada user id yang salah')
+        uniques = []
+        [uniques.append(num) for num in self.members if not num in uniques]
+        groups = chat.newgroup(groupids, groupnames, uniques)
+        self.backtochatlist(self.name)
+
+
+
     def sendto(self, username, receivername, receiver):
         self.receiverwho = receivername
         self.receiverid = receiver
+        self.filename = ""
         # to show chat window
         self.Window.deiconify()
         self.Window.title("Ruangan Chat")
@@ -239,7 +460,7 @@ class ChatClient:
         self.labelHead = Label(self.Window,
                                bg="#17202A",
                                fg="#EAECEE",
-                               text="Chat " + receivername,
+                               text="Chat " + receivername + " sebagai " + self.name,
                                font="Helvetica 13 bold",
                                pady=5)
 
@@ -353,7 +574,7 @@ class ChatClient:
                                 font="Helvetica 10 bold",
                                 width=20,
                                 bg="#ABB2B9",
-                                command=lambda: self.sendmessage(receiver, self.TextMsg.get("1.0", 'end-1c')))
+                                command=lambda: self.sendhandler(receiver, self.TextMsg.get("1.0", 'end-1c')))
 
         self.buttonMsg.place(relx=0.77,
                              rely=0.004,
@@ -362,16 +583,16 @@ class ChatClient:
 
         # create a MyFile Button
         self.buttonMF = Button(self.labelBottom,
-                                text="File Anda",
-                                font="Helvetica 10 bold",
-                                width=20,
-                                bg="#ABB2B9",
-                                command=lambda: self.myfilepage(receiver))
+                               text="File Anda",
+                               font="Helvetica 10 bold",
+                               width=20,
+                               bg="#ABB2B9",
+                               command=lambda: self.myfilepage(receiver))
 
         self.buttonMF.place(relx=0.77,
-                             rely=0.06,
-                             relheight=0.035,
-                             relwidth=0.22)
+                            rely=0.06,
+                            relheight=0.035,
+                            relwidth=0.22)
 
         # create a Send File Button
         self.buttonMsg2 = Button(self.labelBottom,
@@ -392,7 +613,7 @@ class ChatClient:
                                  font="Helvetica 10 bold",
                                  width=20,
                                  bg="#ABB2B9",
-                                 command=lambda: self.sendfile(receiver, self.filename))
+                                 command=lambda: self.filehandler(receiver, self.filename))
 
         self.buttonMsg3.place(relx=0.77,
                               rely=0.126,
@@ -413,12 +634,23 @@ class ChatClient:
 
         self.textCons.config(state=DISABLED)
 
+    def sendhandler(self, receiver, text):
+        if not(self.TextMsg.get("1.0", 'end-1c') and self.TextMsg.get("1.0", 'end-1c').strip()):
+            return tkinter.messagebox.showinfo('Error', 'Pesan tidak boleh kosong')
+        self.sendmessage(receiver, text)
+
+    def filehandler(self, receiver, filename):
+        if not(self.filename and self.filename.strip()):
+            return tkinter.messagebox.showinfo('Error', 'File tidak boleh kosong')
+        self.sendfile(receiver, filename)
+
     def sendgroup(self, username, groupname, group):
-        self.groupwho = groupname
-        self.groupid = group
+        self.isgroup = True
+        self.receiverid = group
+        self.filename = ""
         # to show chat window
         self.Window.deiconify()
-        self.Window.title("Ruangan Chat Grup")
+        self.Window.title("Ruangan Grup Chat")
         self.Window.resizable(width=False,
                               height=False)
         self.Window.configure(width=470,
@@ -427,7 +659,7 @@ class ChatClient:
         self.labelHead = Label(self.Window,
                                bg="#17202A",
                                fg="#EAECEE",
-                               text="Chat " + groupname,
+                               text="Grup Chat " + groupname + " sebagai " + self.name,
                                font="Helvetica 13 bold",
                                pady=5)
 
@@ -541,7 +773,7 @@ class ChatClient:
                                 font="Helvetica 10 bold",
                                 width=20,
                                 bg="#ABB2B9",
-                                command=lambda: self.send_group(group, self.TextMsg.get("1.0", 'end-1c')))
+                                command=lambda: self.sendgrouphandler(group, self.TextMsg.get("1.0", 'end-1c')))
 
         self.buttonMsg.place(relx=0.77,
                              rely=0.004,
@@ -550,16 +782,16 @@ class ChatClient:
 
         # create a MyFile Button
         self.buttonMF = Button(self.labelBottom,
-                                text="File Anda",
-                                font="Helvetica 10 bold",
-                                width=20,
-                                bg="#ABB2B9",
-                                command=lambda: self.myfilepage(group))
+                               text="File Anda",
+                               font="Helvetica 10 bold",
+                               width=20,
+                               bg="#ABB2B9",
+                               command=lambda: self.myfilepage(receiver))
 
         self.buttonMF.place(relx=0.77,
-                             rely=0.06,
-                             relheight=0.035,
-                             relwidth=0.22)
+                            rely=0.06,
+                            relheight=0.035,
+                            relwidth=0.22)
 
         # create a Send File Button
         self.buttonMsg2 = Button(self.labelBottom,
@@ -580,7 +812,7 @@ class ChatClient:
                                  font="Helvetica 10 bold",
                                  width=20,
                                  bg="#ABB2B9",
-                                 command=lambda: self.sendfile(group, self.filename))
+                                 command=lambda: self.filehandler(receiver, self.filename))
 
         self.buttonMsg3.place(relx=0.77,
                               rely=0.126,
@@ -599,7 +831,32 @@ class ChatClient:
 
         scrollbar.config(command=self.textCons.yview)
 
+        # Capture list user
+        userlist = []
+        for k, v in users.items():
+            for j, l in groups.items():
+                if j == group:
+                    for i in l['member']:
+                        if i == k:
+                            userlist.append(v['nama'])
+
+        usergang = ', '.join(userlist)
+        self.textCons.insert(END,
+                             "Ada " + usergang + " dichat ini" + "\n")
+
         self.textCons.config(state=DISABLED)
+
+
+
+    def sendgrouphandler(self, groupreceiver, text):
+        if not(self.TextMsg.get("1.0", 'end-1c') and self.TextMsg.get("1.0", 'end-1c').strip()):
+            return tkinter.messagebox.showinfo('Error', 'Pesan Grup tidak boleh kosong')
+        self.sendgroupmessage(groupreceiver, text)
+
+    def filegrouphandler(self, receiver, filename):
+        if not(self.filename and self.filename.strip()):
+            return tkinter.messagebox.showinfo('Error', 'File tidak boleh kosong')
+        self.sendfile(receiver, filename)
 
     def myfilepage(self, receiver):
         self.win = Toplevel()
@@ -635,7 +892,7 @@ class ChatClient:
     def getmessage(self):
         while True:
             print(self.inbox().strip())
-            time.sleep(3)
+            time.sleep(1)
             # if self.chatopen == False :
             #     break
             # try:
@@ -653,7 +910,6 @@ class ChatClient:
         os.chdir(os.path.dirname(s))
         self.entryFile.delete(0, END)
         self.entryFile.insert(0, self.filename)
-        # self.entryFile.configure(text="File : " + self.filename)
 
     def proses(self, cmdline):
         j = cmdline.split(" ")
@@ -736,7 +992,7 @@ class ChatClient:
                                      self.fullname + " : " + message + "\n")
             else:
                 self.textCons.insert(END,
-                                 self.fullname + " : " + self.TextMsg.get("1.0", 'end-1c') + "\n")
+                                     self.fullname + " : " + self.TextMsg.get("1.0", 'end-1c') + "\n")
                 self.isfile = False
             self.textCons.config(state=DISABLED)
             self.textCons.see(END)
@@ -755,11 +1011,16 @@ class ChatClient:
         if result['status'] == 'OK':
             for k, v in result['messages'].items():
                 if v:
+                    # if self.isgroup:
+                    #     return "PROOO"
                     if k == self.receiverid:
-                        # print(" ".format(json.dumps(v[0])))
                         self.textCons.config(state=NORMAL)
-                        self.textCons.insert(END,
-                                             self.receiverwho + " :" + v[0].get('msg'))
+                        if self.isgroup:
+                            self.textCons.insert(END,
+                                                 v[0].get('msg_from') + " :" + v[0].get('msg'))
+                        else:
+                            self.textCons.insert(END,
+                                                 self.receiverwho + " :" + v[0].get('msg'))
                         self.textCons.config(state=DISABLED)
                         self.textCons.see(END)
             return "{}".format(json.dumps(result['messages']))
@@ -767,27 +1028,28 @@ class ChatClient:
             tkinter.messagebox.showinfo('Error', 'Inbox Gagal Dibuka')
             return "Error, {}".format(result['message'])
 
-    def sendfile(self,usernameto, filename):
-        if (self.tokenid==""):
+    def sendfile(self, usernameto, filename):
+        if (self.tokenid == ""):
             return "Error, not authorized"
-        try :
+        try:
             file = open(filename, "rb")
         except FileNotFoundError:
             return "Error, {} file not found".format(filename)
 
         buffer = file.read()
         convertedstring = base64.b64encode(buffer).decode('utf-8')
-        message ="send_file {} {} {} {} \r\n" . format(self.tokenid,usernameto, filename, convertedstring)
+        message = "send_file {} {} {} {} \r\n".format(self.tokenid, usernameto, filename, convertedstring)
         result = self.sendstring(message)
-        if result['status']=='OK':
+        if result['status'] == 'OK':
             # check if file + reset location back
             self.isfile = True
             self.sendmessage(usernameto, "Mengirim File " + filename + " ke File Anda")
             self.entryFile.delete(0, END)
+            self.filename = ""
             os.chdir(self.initlocation)
-            return "file {} sent to {}" . format(filename, usernameto)
+            return "file {} sent to {}".format(filename, usernameto)
         else:
-            return "Error, {}" . format(result['message'])
+            return "Error, {}".format(result['message'])
 
     def download_file(self, username, filename):
         if (self.tokenid == ""):
@@ -818,7 +1080,8 @@ class ChatClient:
                                                    font="Helvetica 10 bold",
                                                    width=20,
                                                    bg="#FFFFFF",
-                                                   command=lambda receiver=k, filename=ngok: self.download_file(receiver, filename))
+                                                   command=lambda receiver=k, filename=ngok: self.download_file(
+                                                       receiver, filename))
 
                         self.buttonperson.place(relx=0.1,
                                                 rely=0.01 + y,
@@ -837,9 +1100,13 @@ class ChatClient:
         print(string)
         result = self.sendstring(string)
         if result['status'] == 'OK':
+            # clear msgtext
+            self.TextMsg.delete('1.0', END)
             return "message sent to {}".format(groupto)
         else:
             return "Error, {}".format(result['message'])
+
+
 if __name__ == "__main__":
     cc = ChatClient()
     while True:

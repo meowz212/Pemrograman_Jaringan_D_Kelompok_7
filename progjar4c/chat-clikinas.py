@@ -83,16 +83,6 @@ class ChatClient:
             return "message sent to {}" . format(usernameto)
         else:
             return "Error, {}" . format(result['message'])
-    def sendgroupmessage(self,groupto="xxx",message="xxx"):
-        if (self.tokenid==""):
-            return "Error, not authorized"
-        string="send_group {} {} {} \r\n" . format(self.tokenid,groupto,message)
-        print(string)
-        result = self.sendstring(string)
-        if result['status']=='OK':
-            return "message sent to {}" . format(groupto)
-        else:
-            return "Error, {}" . format(result['message'])
     def sendfile(self, usernameto, filename):
         if(self.tokenid==""):
             return "Error, not authorized"
@@ -105,6 +95,7 @@ class ChatClient:
         message="send_file {} {} {} {} \r\n" .format(self.tokenid, usernameto, filename, buffer_string)
         result = self.sendstring(message)
         if result['status']=='OK':
+            self.sendmessage(usernameto, 'Mengirim File ' + filename + ' ke My Files')
             return "file {} sent to {}" . format(filename, usernameto)
         else:
             return "Error, {}" . format(result['message'])
@@ -114,13 +105,10 @@ class ChatClient:
         string="my_file {} \r\n" . format(self.tokenid)
         result = self.sendstring(string)
         if result['status']=='OK':
-            for k, v in result['messages'].items():
-                if v:
-                    print(k, v)
             return "{}" . format(json.dumps(result['messages']))
         else:
             return "Error, {}" . format(result['message'])
-    def downloadfile(self, username, filename, filename2):
+    def downloadfile(self, username, filename):
         if (self.tokenid==""):
             return "Error, not authorized"
         string="download_file {} {} {} \r\n" . format(self.tokenid, username, filename)
@@ -139,6 +127,17 @@ class ChatClient:
         result = self.sendstring(string)
         if result['status']=='OK':
             return "{}" . format(json.dumps(result['messages']))
+        else:
+            return "Error, {}" . format(result['message'])
+
+    def sendgroupmessage(self,groupto="xxx",message="xxx"):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="send_group {} {} {} \r\n" . format(self.tokenid,groupto,message)
+        print(string)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "message sent to {}" . format(groupto)
         else:
             return "Error, {}" . format(result['message'])
 

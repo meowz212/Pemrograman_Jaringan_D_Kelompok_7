@@ -19,16 +19,20 @@ class Chat:
         self.users['lineker'] = {'nama': 'Gary Lineker', 'negara': 'Inggris', 'password': 'surabaya', 'incoming': {},
                                  'outgoing': {}, 'files': {}}
         self.users['aul'] = {'nama': 'Aul Ronaldo', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
-                                 'outgoing': {}, 'files': {}}
+                             'outgoing': {}, 'files': {}}
         self.users['kinas'] = {'nama': 'Kinas turu', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
-                                 'outgoing': {}, 'files': {}}
+                               'outgoing': {}, 'files': {}}
         self.users['rimas'] = {'nama': 'Rimas Lineker', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
-                                 'outgoing': {}, 'files': {}}
+                               'outgoing': {}, 'files': {}}
         self.groups['group1'] = {'nama': 'Group 1', 'member': ['messi', 'henderson', 'lineker']}
-        self.groups['group2'] = {'nama': 'Group 2', 'member': ['aul', 'rimas', 'kinas']}
+        self.groups['group2'] = {'nama': 'Group 2', 'member': ['messi', 'aul', 'rimas', 'kinas']}
 
     def getuser(self):
         return self.users
+
+    def newgroup(self, groupid, groupname, members):
+        self.groups[groupid] = {'nama': groupname, 'member': members}
+        return self.groups
 
     def getgroup(self):
         return self.groups
@@ -52,21 +56,6 @@ class Chat:
                 logging.warning(
                     "SEND: session {} send message from {} to {}".format(sessionid, usernamefrom, usernameto))
                 return self.send_message(sessionid, usernamefrom, usernameto, message)
-            elif (command == 'inbox'):
-                sessionid = j[1].strip()
-                username = self.sessions[sessionid]['username']
-                logging.warning("INBOX: {}".format(sessionid))
-                return self.get_inbox(username)
-            elif (command == 'send_group'):
-                sessionid = j[1].strip()
-                groupto = j[2].strip()
-                usernamefrom = self.sessions[sessionid]['username']
-                message = ""
-                for w in j[3:]:
-                    message = "{} {}".format(message, w)
-                logging.warning(
-                    "SEND: session {} send message from {} to group {}".format(sessionid, usernamefrom, groupto))
-                return self.send_groupmessage(sessionid, usernamefrom, groupto, message)
             elif (command == 'send_file'):
                 sessionid = j[1].strip()
                 usernameto = j[2].strip()
@@ -92,6 +81,16 @@ class Chat:
                 logging.warning("DOWNLOAD: session {} file {}".format(sessionid, filename))
                 username = self.sessions[sessionid]['username']
                 return self.download_file(sessionid, username, usernameto, filename)
+            elif (command == 'send_group'):
+                sessionid = j[1].strip()
+                groupto = j[2].strip()
+                usernamefrom = self.sessions[sessionid]['username']
+                message = ""
+                for w in j[3:]:
+                    message = "{} {}".format(message, w)
+                logging.warning(
+                    "SEND: session {} send message from {} to group {}".format(sessionid, usernamefrom, groupto))
+                return self.send_groupmessage(sessionid, usernamefrom, groupto, message)
             else:
                 return {'status': 'ERROR', 'message': '**Protocol Tidak Benar'}
         except KeyError:
@@ -123,6 +122,7 @@ class Chat:
                 msgs[users].append(s_fr['incoming'][users].get_nowait())
 
         return {'status': 'OK', 'messages': msgs}
+
     def get_group(self, group):
         if (group not in self.groups):
             return False
@@ -183,17 +183,18 @@ class Chat:
             return {'status': 'ERROR', 'message': 'File Tidak Ditemukan'}
         data = s_usr['files'][username_to][filename]
         return {'status': 'OK', 'messages': f'Downloaded {filename}', 'filename': f'{filename}', 'data': f'{data}'}
+
     def my_file(self, sessionid, username):
-            if (sessionid not in self.sessions):
-                return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
-            s_usr = self.get_user(username)
-            files = s_usr['files']
-            msgs = {}
-            for user in files:
-                msgs[user] = []
-                for file in files[user] :
-                    msgs[user].append(file)
-            return {'status': 'OK', 'messages': msgs}
+        if (sessionid not in self.sessions):
+            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        s_usr = self.get_user(username)
+        files = s_usr['files']
+        msgs = {}
+        for user in files:
+            msgs[user] = []
+            for file in files[user]:
+                msgs[user].append(file)
+        return {'status': 'OK', 'messages': msgs}
 
     def send_groupmessage(self, sessionid, username_from, group_to, message):
         if (sessionid not in self.sessions):
@@ -248,18 +249,3 @@ if __name__ == "__main__":
     print(j.get_inbox('messi'))
     print("isi mailbox dari henderson")
     print(j.get_inbox('henderson'))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
