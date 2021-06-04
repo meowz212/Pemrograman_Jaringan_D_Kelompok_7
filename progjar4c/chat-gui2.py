@@ -111,7 +111,7 @@ class ChatClient:
     def loginto(self, username, password):
         self.loginpage.destroy()
         x = self.login(username, password).strip()
-        print(x)
+        # print(x)
         if (x == "Error, User Tidak Ada"):
             tkinter.messagebox.showinfo('Error', 'Nama tidak ada')
             self.loginpage.destroy()
@@ -1017,7 +1017,7 @@ class ChatClient:
                     #     return "PROOO"
                     if k == self.receiverid:
                         self.textCons.config(state=NORMAL)
-                        print(self.isgroup)
+                        # print(self.isgroup)
                         if self.isgroup:
                             self.textCons.insert(END,
                                                  v[0].get('msg_from') + " :" + v[0].get('msg'))
