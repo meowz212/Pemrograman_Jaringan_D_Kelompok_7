@@ -445,6 +445,7 @@ class ChatClient:
         self.backtochatlist(self.name)
 
     def sendto(self, username, receivername, receiver):
+        self.isgroup = False
         self.receiverwho = receivername
         self.receiverid = receiver
         self.filename = ""
@@ -884,7 +885,6 @@ class ChatClient:
 
     def backtochatlist(self, name):
         # self.chatopen = False
-        self.isgroup = False
         self.receiverid = ""
         self.chatlist(name)
 
@@ -1017,12 +1017,13 @@ class ChatClient:
                     #     return "PROOO"
                     if k == self.receiverid:
                         self.textCons.config(state=NORMAL)
+                        print(self.isgroup)
                         if self.isgroup:
                             self.textCons.insert(END,
                                                  v[0].get('msg_from') + " :" + v[0].get('msg'))
                         else:
                             self.textCons.insert(END,
-                                                 self.receiverwho + " :" + v[0].get('msg'))
+                                                 self.receiverwho + " :" + v[0])
                         self.textCons.config(state=DISABLED)
                         self.textCons.see(END)
             return "{}".format(json.dumps(result['messages']))
