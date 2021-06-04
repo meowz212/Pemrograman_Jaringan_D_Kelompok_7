@@ -46,6 +46,10 @@ class ChatClient:
                 return self.downloadfile(username, filename)
             elif (command=='inbox'):
                 return self.inbox()
+            elif (command == 'send_group_file'):
+                groupto = j[1].strip()
+                filename = j[2].strip()
+                return self.sendgroupfile(groupto, filename)
             else:
                 return "*Maaf, command tidak benar"
         except IndexError:
@@ -140,6 +144,23 @@ class ChatClient:
             return "message sent to {}" . format(groupto)
         else:
             return "Error, {}" . format(result['message'])
+
+    def sendgroupfile(self, groupto, filename):
+        if (self.tokenid == ""):
+            return "Error, not authorized"
+        try:
+            file = open(filename, "rb")
+        except FileNotFoundError:
+            return "Error, {} file not found".format(filename)
+
+        buffer = file.read()
+        convertedstring = base64.b64encode(buffer).decode('utf-8')
+        message = "send_group_file {} {} {} {} \r\n".format(self.tokenid, groupto, filename, convertedstring)
+        result = self.sendstring(message)
+        if result['status'] == 'OK':
+            return "file {} sent to {}".format(filename, groupto)
+        else:
+            return "Error, {}".format(result['message'])
 
 
 

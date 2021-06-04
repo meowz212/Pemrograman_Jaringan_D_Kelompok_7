@@ -61,7 +61,19 @@ class Chat:
                 username_from = self.sessions[sessionid]['username']
                 logging.warning("DOWNLOAD: session {} file {} ".format(sessionid, filename))
                 return self.download_file(sessionid, username_from, usernameto, filename)
+            elif (command == 'send_group_file'):
+                sessionid = j[1].strip()
+                groupto = j[2].strip()
+                filename = j[3].strip()
+                message = ""
 
+                for w in j[4:-1]:
+                    message = "{} {}".format(message, w)
+                username_from = self.sessions[sessionid]['username']
+                logging.warning(
+                    "SEND: session {} send message from {} to {} with data {}".format(sessionid, username_from, groupto,
+                                                                                      message))
+                return self.send_groupfile(sessionid, username_from, groupto, filename, message)
             else:
                 return {'status': 'ERROR', 'message': '**Protocol Tidak Benar'}
         except KeyError:
@@ -128,6 +140,36 @@ class Chat:
             return {'status': 'ERROR', 'message': 'File Tidak Ditemukan'}
         data = s_usr['files'][username_to][filename]
         return {'status': 'OK', 'messages': f'Downloaded {filename}', 'filename': f'{filename}', 'data': f'{data}'}
+
+    def send_groupfile(self, sessionid, username_from, group_to, filename, message):
+        if (sessionid not in self.sessions):
+            return {'status': 'ERROR', 'message': 'Session Tidak Ditemukan'}
+        s_fr = self.get_user(username_from)
+        s_gr = self.get_group(group_to)
+
+        if (s_fr == False):
+            return {'status': 'ERROR', 'message': 'User Tidak Ditemukan'}
+
+        if (s_gr == False):
+            return {'status': 'ERROR', 'message': 'Group Tidak Ditemukan'}
+
+        try:
+            s_fr['files'][username_from][filename] = message
+        except KeyError:
+            s_fr['files'][username_from] = {}
+            s_fr['files'][username_from][filename] = message
+
+        for member in s_gr['member']:
+            s_to = self.get_user(member)
+            if (s_to == False):
+                continue
+            try:
+                s_to['files'][group_to][filename] = message
+            except KeyError:
+                s_to['files'][group_to] = {}
+                s_to['files'][group_to][filename] = message
+
+        return {'status': 'OK', 'message': 'File Sent'}
 
 
 if __name__ == "__main__":
