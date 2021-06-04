@@ -884,6 +884,7 @@ class ChatClient:
 
     def backtochatlist(self, name):
         # self.chatopen = False
+        self.isgroup = False
         self.receiverid = ""
         self.chatlist(name)
 

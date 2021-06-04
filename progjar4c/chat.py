@@ -19,7 +19,7 @@ class Chat:
                                  'outgoing': {}, 'files': {}}
         self.users['aul'] = {'nama': 'Aul Ronaldo', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
                              'outgoing': {}, 'files': {}}
-        self.users['kinas'] = {'nama': 'Kinas turu', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
+        self.users['kinas'] = {'nama': 'Kinas Puger', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
                                'outgoing': {}, 'files': {}}
         self.users['rimas'] = {'nama': 'Rimas Lineker', 'negara': 'Inggris', 'password': 'sby', 'incoming': {},
                                'outgoing': {}, 'files': {}}
