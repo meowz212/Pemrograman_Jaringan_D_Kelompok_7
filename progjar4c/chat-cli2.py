@@ -1,6 +1,9 @@
 import socket
 import os
 import json
+import base64
+import logging
+import string
 
 TARGET_IP = "127.0.0.1"
 TARGET_PORT = 8889
@@ -28,17 +31,39 @@ class ChatClient:
                 return self.sendmessage(usernameto,message)
             elif (command=='inbox'):
                 return self.inbox()
+
+            elif (command=='send_file'):
+                usernameto = j[1].strip()
+                filename = j[2].strip()
+                return self.sendfile(usernameto,filename)
+            elif (command=='download_file'):
+                usernameto = j[1].strip()
+                filename = j[2].strip()
+                return self.download_file(usernameto, filename)
+            elif (command == 'my_file'):
+                return self.myfile()
+            elif (command=='send_group'):
+                groupto = j[1].strip()
+                message=""
+                for w in j[2:]:
+                   message="{} {}" . format(message,w)
+                return self.sendgroupmessage(groupto,message)
+            elif (command=='send_group_file'):
+                groupto = j[1].strip()
+                filename = j[2].strip()
+                return self.sendgroupfile(groupto,filename)
             else:
                 return "*Maaf, command tidak benar"
         except IndexError:
                 return "-Maaf, command tidak benar"
+
     def sendstring(self,string):
         try:
             self.sock.sendall(string.encode())
             receivemsg = ""
             while True:
                 data = self.sock.recv(64)
-                print("diterima dari server",data.strip())
+                print("diterima dari server",data)
                 if (data):
                     receivemsg = "{}{}" . format(receivemsg,data.decode())  #data harus didecode agar dapat di operasikan dalam bentuk string
                     if receivemsg[-4:]=='\r\n\r\n':
@@ -74,8 +99,73 @@ class ChatClient:
             return "{}" . format(json.dumps(result['messages']))
         else:
             return "Error, {}" . format(result['message'])
+    def sendfile(self,usernameto, filename):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        try :
+            file = open(filename, "rb")
+        except FileNotFoundError:
+            return "Error, {} file not found".format(filename)
 
+        buffer = file.read()
+        convertedstring = base64.b64encode(buffer).decode('utf-8')
+        message ="send_file {} {} {} {} \r\n" . format(self.tokenid,usernameto, filename, convertedstring)
+        result = self.sendstring(message)
+        if result['status']=='OK':
+            return "file {} sent to {}" . format(filename, usernameto)
+        else:
+            return "Error, {}" . format(result['message'])
 
+    def download_file(self, username, filename):
+        if (self.tokenid == ""):
+            return "Error, not authorized"
+        string = "download_file {} {} {} \r\n".format(self.tokenid, username, filename)
+        result = self.sendstring(string)
+        if result['status'] == 'OK':
+            output_file = open(result['filename'], 'wb')
+            output_file.write(base64.b64decode(result['data']))
+            output_file.close()
+            return "{}".format(json.dumps(result['messages']))
+        else:
+            return "Error, {}".format(result['message'])
+
+    def myfile(self):
+        if (self.tokenid == ""):
+            return "Error, not authorized"
+        string = "my_file {} \r\n".format(self.tokenid)
+        result = self.sendstring(string)
+        if result['status'] == 'OK':
+            return "{}".format(json.dumps(result['messages']))
+        else:
+            return "Error, {}".format(result['message'])
+
+    def sendgroupmessage(self,groupto="xxx",message="xxx"):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        string="send_group {} {} {} \r\n" . format(self.tokenid,groupto,message)
+        print(string)
+        result = self.sendstring(string)
+        if result['status']=='OK':
+            return "message sent to {}" . format(groupto)
+        else:
+            return "Error, {}" . format(result['message'])
+
+    def sendgroupfile(self,groupto, filename):
+        if (self.tokenid==""):
+            return "Error, not authorized"
+        try :
+            file = open(filename, "rb")
+        except FileNotFoundError:
+            return "Error, {} file not found".format(filename)
+
+        buffer = file.read()
+        convertedstring = base64.b64encode(buffer).decode('utf-8')
+        message ="send_group_file {} {} {} {} \r\n" . format(self.tokenid, groupto, filename, convertedstring)
+        result = self.sendstring(message)
+        if result['status']=='OK':
+            return "file {} sent to {}" . format(filename, groupto)
+        else:
+            return "Error, {}" . format(result['message'])
 
 if __name__=="__main__":
     cc = ChatClient()
