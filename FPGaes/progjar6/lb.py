@@ -10,9 +10,9 @@ class BackendList:
 		self.servers=[]
 		self.servers.append(('localhost',9001))
 		self.servers.append(('localhost',9002))
-		# self.servers.append(('localhost',9003))
-		# self.servers.append(('localhost',9004))
-		# self.servers.append(('localhost',9005))
+		self.servers.append(('localhost',9003))
+		self.servers.append(('localhost',9004))
+		self.servers.append(('localhost',9005))
 		self.current=0
 
 	def getserver(self):
@@ -57,7 +57,7 @@ class Server(asyncore.dispatcher):
 		self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.set_reuse_addr()
 		self.bind(('',portnumber))
-		self.listen(2)
+		self.listen(5)
 		self.bservers = BackendList()
 		logging.warning("load balancer running on port {}" . format(portnumber))
 

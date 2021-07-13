@@ -36,7 +36,8 @@ class ProcessTheClient(threading.Thread):
 						#hasil sudah dalam bentuk bytes
 						self.connection.sendall(hasil)
 						rcv=""
-						self.connection.close()
+
+
 				else:
 					break
 			except OSError as e:
@@ -62,6 +63,7 @@ class Server(threading.Thread):
 			clt = ProcessTheClient(self.connection, self.client_address)
 			clt.start()
 			self.the_clients.append(clt)
+
 
 
 def main():

@@ -25,10 +25,6 @@ def forward_process(data):
 			forward_response['server'] = server
 			forward_response['request'] = data
 
-		# if (url[1] in url_address):
-		# 	forward_response['server'] = server[1]
-		# 	forward_response['request'] = data.replace(url, '/pdf/')
-
 		if "server" not in forward_response:
 			forward_response['server'] = default_server
 			forward_response['request'] = data

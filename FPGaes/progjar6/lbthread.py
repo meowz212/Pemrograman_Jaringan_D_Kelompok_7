@@ -30,16 +30,21 @@ class ProcessTheClient(threading.Thread):
 		threading.Thread.__init__(self)
 
 	def run(self):
+		rcv = ""
 		while True:
 			try:
-				data = self.connection.recv(4096)
+				data = self.connection.recv(8192)
+				data = data.decode()
 				self.dest_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				if data:
 					server = self.destserver
 					print(f"forwarded to server {server}")
 					self.dest_sock.connect(server)
-					self.connection.sendall(data)
-					recvdata = self.dest_sock.recv(4096)
+					self.dest_sock.sendall(data.encode())
+					# while (True):
+					recvdata = self.dest_sock.recv(8192)
+					# 	if (recvdata == ''):
+					# 		break
 					self.connection.sendall(recvdata)
 					logging.warning(data)
 					logging.warning(recvdata)
@@ -60,7 +65,7 @@ class Server(threading.Thread):
 		threading.Thread.__init__(self)
 
 	def run(self):
-		self.my_socket.bind(('0.0.0.0', 8889))
+		self.my_socket.bind(('0.0.0.0', 666))
 		self.my_socket.listen(5)
 
 		while True:

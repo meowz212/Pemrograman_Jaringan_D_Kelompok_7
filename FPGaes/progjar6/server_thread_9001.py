@@ -36,7 +36,8 @@ class ProcessTheClient(threading.Thread):
 						#hasil sudah dalam bentuk bytes
 						self.connection.sendall(hasil)
 						rcv=""
-						self.connection.close()
+
+
 				else:
 					break
 			except OSError as e:
