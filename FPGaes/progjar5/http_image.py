@@ -68,7 +68,7 @@ class HttpServer:
 		# 	print(file)
 		# files = glob.glob('/home/geeks/Desktop/gfg/**/*.txt',
 		# 				  recursive=True)
-		print(files)
+		# print(files)
 		thedir='./'
 		if (object_address == '/images/'):
 			return self.response(200,'OK','Ini Adalah web Server percobaan untuk images',dict())
