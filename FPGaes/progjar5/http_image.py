@@ -64,8 +64,8 @@ class HttpServer:
 
 	def http_get(self,object_address,headers):
 		files = glob(".\\images/**/*", recursive=True)
-		for file in files:
-			print(file)
+		# for file in files:
+		# 	print(file)
 		# files = glob.glob('/home/geeks/Desktop/gfg/**/*.txt',
 		# 				  recursive=True)
 		print(files)

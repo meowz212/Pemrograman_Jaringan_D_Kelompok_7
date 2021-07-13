@@ -8,7 +8,6 @@ class HttpServer:
 	def __init__(self):
 		self.sessions={}
 		self.types={}
-		self.types['.jpg'] = 'image/jpeg'
 		self.types['.txt']='text/plain'
 		self.types['.html']='text/html'
 	def response(self,kode=404,message='Not Found',messagebody=bytes(),headers={}):
