@@ -38,7 +38,7 @@ class ProcessTheClient(threading.Thread):
 				self.dest_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				if data:
 					server = self.destserver
-					print(f"forwarded to server {server}")
+					logging.warning("koneksi diteruskan ke {}".format(server))
 					self.dest_sock.connect(server)
 					self.dest_sock.sendall(data.encode())
 					# while (True):
@@ -46,8 +46,8 @@ class ProcessTheClient(threading.Thread):
 					# 	if (recvdata == ''):
 					# 		break
 					self.connection.sendall(recvdata)
-					logging.warning(data)
-					logging.warning(recvdata)
+					# logging.warning(data)
+					# logging.warning(recvdata)
 					break
 				else:
 					break
